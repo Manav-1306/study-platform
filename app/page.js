@@ -1,69 +1,82 @@
-import Image from "next/image";
+import Link from "next/link";
+
+const subjects = [
+  {
+    name: "Maths",
+    slug: "maths",
+    symbol: "∑",
+    description: "Make sense of numbers, patterns, and big ideas.",
+    color: "bg-violet-100 text-violet-700",
+  },
+  {
+    name: "Physics",
+    slug: "physics",
+    symbol: "◉",
+    description: "Explore the forces and rules behind our world.",
+    color: "bg-sky-100 text-sky-700",
+  },
+  {
+    name: "Chemistry",
+    slug: "chemistry",
+    symbol: "⚗",
+    description: "Discover what matter is made of and how it changes.",
+    color: "bg-emerald-100 text-emerald-700",
+  },
+  {
+    name: "Programming",
+    slug: "programming",
+    symbol: "</>",
+    description: "Build useful things one line of code at a time.",
+    color: "bg-amber-100 text-amber-700",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.js
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="min-h-screen bg-[#f8f7f3] px-6 py-12 text-slate-900 sm:px-10 sm:py-16">
+      <div className="mx-auto max-w-5xl">
+        <header className="mb-12">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-violet-700">
+            Your learning space
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+            Study Platform
+          </h1>
+          <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">
+            Pick a subject and find notes, slides, and videos gathered in one
+            place.
+          </p>
+        </header>
+
+        <section aria-label="Subjects" className="grid gap-5 sm:grid-cols-2">
+          {subjects.map((subject) => (
+            <Link
+              key={subject.slug}
+              href={`/subject/${subject.slug}`}
+              className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-violet-200 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-600 sm:p-8"
+            >
+              <div className="flex items-start justify-between">
+                <span
+                  aria-hidden="true"
+                  className={`flex size-14 items-center justify-center rounded-2xl text-xl font-bold ${subject.color}`}
+                >
+                  {subject.symbol}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="text-2xl text-slate-300 transition group-hover:translate-x-1 group-hover:text-violet-600"
+                >
+                  →
+                </span>
+              </div>
+              <h2 className="mt-7 text-2xl font-semibold">{subject.name}</h2>
+              <p className="mt-2 leading-7 text-slate-600">
+                {subject.description}
+              </p>
+            </Link>
+          ))}
+        </section>
+      </div>
+    </main>
   );
 }
