@@ -1,35 +1,5 @@
 import Link from "next/link";
-
-const subjects = [
-  {
-    name: "Maths",
-    slug: "maths",
-    symbol: "∑",
-    description: "Make sense of numbers, patterns, and big ideas.",
-    color: "bg-violet-100 text-violet-700",
-  },
-  {
-    name: "Physics",
-    slug: "physics",
-    symbol: "◉",
-    description: "Explore the forces and rules behind our world.",
-    color: "bg-sky-100 text-sky-700",
-  },
-  {
-    name: "Chemistry",
-    slug: "chemistry",
-    symbol: "⚗",
-    description: "Discover what matter is made of and how it changes.",
-    color: "bg-emerald-100 text-emerald-700",
-  },
-  {
-    name: "Programming",
-    slug: "programming",
-    symbol: "</>",
-    description: "Build useful things one line of code at a time.",
-    color: "bg-amber-100 text-amber-700",
-  },
-];
+import { years } from "./data/subjects";
 
 export default function Home() {
   return (
@@ -43,24 +13,23 @@ export default function Home() {
             Study Platform
           </h1>
           <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">
-            Pick a subject and find notes, slides, and videos gathered in one
-            place.
+            Choose your year to find its pools, branches, and subject resources.
           </p>
         </header>
 
-        <section aria-label="Subjects" className="grid gap-5 sm:grid-cols-2">
-          {subjects.map((subject) => (
+        <section aria-label="Study years" className="grid gap-5 sm:grid-cols-2">
+          {years.map((year) => (
             <Link
-              key={subject.slug}
-              href={`/subject/${subject.slug}`}
+              key={year.number}
+              href={`/year/${year.number}`}
               className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-violet-200 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-600 sm:p-8"
             >
               <div className="flex items-start justify-between">
                 <span
                   aria-hidden="true"
-                  className={`flex size-14 items-center justify-center rounded-2xl text-xl font-bold ${subject.color}`}
+                  className="flex size-14 items-center justify-center rounded-2xl bg-violet-100 text-xl font-bold text-violet-700"
                 >
-                  {subject.symbol}
+                  {String(year.number).padStart(2, "0")}
                 </span>
                 <span
                   aria-hidden="true"
@@ -69,10 +38,8 @@ export default function Home() {
                   →
                 </span>
               </div>
-              <h2 className="mt-7 text-2xl font-semibold">{subject.name}</h2>
-              <p className="mt-2 leading-7 text-slate-600">
-                {subject.description}
-              </p>
+              <h2 className="mt-7 text-2xl font-semibold">{year.label}</h2>
+              <p className="mt-2 leading-7 text-slate-600">Browse this year&apos;s subjects and study materials.</p>
             </Link>
           ))}
         </section>

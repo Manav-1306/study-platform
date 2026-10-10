@@ -1,7 +1,7 @@
 // Keep this list curated: the video tab can only embed IDs declared here.
 // Replace these examples with the YouTube videos you have approved.
 export const videosBySubject = {
-  maths: [
+  uma023: [
     {
       id: "fNk_zzaMoSs",
       title: "Linear algebra: vectors and spaces",
@@ -13,7 +13,7 @@ export const videosBySubject = {
       description: "A visual explanation of the ideas behind neural networks.",
     },
   ],
-  physics: [
+  uph013: [
     {
       id: "QnQe0xW_JY4",
       title: "An introduction to physics",
@@ -25,7 +25,7 @@ export const videosBySubject = {
       description: "A placeholder for another approved physics lesson.",
     },
   ],
-  chemistry: [
+  ucb009: [
     {
       id: "FSyAehMdpyI",
       title: "The periodic table",
@@ -37,7 +37,7 @@ export const videosBySubject = {
       description: "A placeholder for an approved chemistry lesson.",
     },
   ],
-  programming: [
+  ues103: [
     {
       id: "rfscVS0vtbw",
       title: "Python programming course",

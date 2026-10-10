@@ -1,21 +1,19 @@
 import { notFound } from "next/navigation";
+import { findSubjectBySlug } from "../../data/subjects";
 import { videosBySubject } from "../../data/videos";
 import SubjectTabs from "./subject-tabs";
 
-const subjectNames = {
-  maths: "Maths",
-  physics: "Physics",
-  chemistry: "Chemistry",
-  programming: "Programming",
-};
-
 export default async function SubjectPage({ params }) {
-  const { name } = await params;
-  const videos = videosBySubject[name];
+  const { name: slug } = await params;
+  const subject = findSubjectBySlug(slug);
 
-  if (!subjectNames[name] || !videos) {
-    notFound();
-  }
+  if (!subject) notFound();
 
-  return <SubjectTabs name={subjectNames[name]} videos={videos} />;
+  return (
+    <SubjectTabs
+      name={subject.name}
+      code={subject.code}
+      videos={videosBySubject[subject.slug] ?? []}
+    />
+  );
 }
