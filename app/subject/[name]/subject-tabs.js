@@ -3,16 +3,38 @@
 import Link from "next/link";
 import { useState } from "react";
 import FocusTimer from "./focus-timer";
+import ChatBox from "./chat-box";
 
 const tabs = ["Notes", "Slides", "Books", "PYQs", "Tutorials", "Lab", "Videos"];
 
 export default function SubjectTabs({ name, code, videos }) {
   const [activeTab, setActiveTab] = useState("Notes");
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isFocusActive, setIsFocusActive] = useState(false);
+  const [timerState, setTimerState] = useState({
+    isActive: false,
+    remainingSeconds: 25 * 60,
+    leaveCount: 0,
+  });
   const selectedVideo = videos[selectedIndex] ?? videos[0];
 
   return (
     <main className="min-h-screen bg-[#f8f7f3] px-6 py-10 text-slate-900 sm:px-10 sm:py-14">
+      {timerState.isActive && (
+        <div className="sticky top-0 z-50 -mx-6 mb-4 border-b border-violet-200 bg-[#f8f7f3]/95 px-6 py-3 shadow-sm backdrop-blur sm:-mx-10 sm:px-10">
+          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4">
+            <p className="text-sm font-semibold text-violet-900">Focus session</p>
+            <div className="flex items-center gap-4 text-sm text-slate-700">
+              <p className="font-mono text-lg font-bold tabular-nums text-slate-900" role="timer" aria-live="off">
+                {`${String(Math.floor(timerState.remainingSeconds / 60)).padStart(2, "0")}:${String(timerState.remainingSeconds % 60).padStart(2, "0")}`}
+              </p>
+              <p className="text-right">
+                Left page {timerState.leaveCount} {timerState.leaveCount === 1 ? "time" : "times"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mx-auto max-w-5xl">
         <Link
           href="/"
@@ -35,8 +57,17 @@ export default function SubjectTabs({ name, code, videos }) {
         </header>
 
         <div className="mb-8">
-          <FocusTimer />
+          <FocusTimer
+            onActiveChange={setIsFocusActive}
+            onTimerStateChange={setTimerState}
+          />
         </div>
+
+        {isFocusActive && (
+          <div className="mb-8">
+            <ChatBox subjectName={name} subjectCode={code} />
+          </div>
+        )}
 
         <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div
