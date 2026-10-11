@@ -1,16 +1,13 @@
 import { GoogleGenAI } from "@google/genai";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { AI_CHAT_DOMAINS } from "../lib/auth-config";
 
-const MAX_MESSAGES_PER_IP_PER_DAY = 20;
+const MAX_MESSAGES_PER_USER_PER_DAY = 20;
 const MAX_REQUESTS_PER_MINUTE = 30;
 const MAX_MESSAGE_LENGTH = 4000;
-const dailyUsageByIp = new Map();
+const dailyUsageByUserId = new Map();
 let globalMinuteUsage = { minute: 0, count: 0 };
-
-function getClientIp(request) {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  const ip = forwardedFor?.split(",")[0]?.trim();
-  return ip || request.headers.get("x-real-ip") || "unknown";
-}
 
 function isRateLimitError(error) {
   const status = error?.status ?? error?.statusCode ?? error?.code;
@@ -19,6 +16,31 @@ function isRateLimitError(error) {
     status === "429" ||
     /429|resource[_ ]exhausted|rate.?limit|quota/i.test(error?.message ?? "")
   );
+}
+
+async function getAuthenticatedUser() {
+  const cookieStore = await cookies();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return { user: null, error: new Error("Supabase is not configured yet.") };
+  }
+
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          cookieStore.set(name, value, options);
+        });
+      },
+    },
+  });
+
+  return supabase.auth.getUser();
 }
 
 export async function POST(request) {
@@ -31,6 +53,16 @@ export async function POST(request) {
 
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return Response.json({ error: "Send a valid chat message." }, { status: 400 });
+  }
+
+  const { user, error: authError } = await getAuthenticatedUser();
+  if (authError || !user) {
+    return Response.json({ error: "Please sign in to use the AI chat." }, { status: 401 });
+  }
+
+  const emailDomain = user.email?.split("@")[1]?.toLowerCase();
+  if (!AI_CHAT_DOMAINS.includes(emailDomain)) {
+    return Response.json({ error: "AI chat is for college emails." }, { status: 403 });
   }
 
   const subjectName = typeof body.subjectName === "string" ? body.subjectName.trim() : "";
@@ -68,12 +100,11 @@ export async function POST(request) {
     globalMinuteUsage = { minute: currentMinute, count: 0 };
   }
 
-  const ip = getClientIp(request);
   const currentDay = new Date(now).toISOString().slice(0, 10);
-  const ipUsage = dailyUsageByIp.get(ip);
+  const userUsage = dailyUsageByUserId.get(user.id);
   if (
     globalMinuteUsage.count >= MAX_REQUESTS_PER_MINUTE ||
-    (ipUsage?.day === currentDay && ipUsage.count >= MAX_MESSAGES_PER_IP_PER_DAY)
+    (userUsage?.day === currentDay && userUsage.count >= MAX_MESSAGES_PER_USER_PER_DAY)
   ) {
     return Response.json(
       { error: "The AI is busy, please try again in a minute" },
@@ -82,9 +113,9 @@ export async function POST(request) {
   }
 
   globalMinuteUsage.count += 1;
-  dailyUsageByIp.set(ip, {
+  dailyUsageByUserId.set(user.id, {
     day: currentDay,
-    count: ipUsage?.day === currentDay ? ipUsage.count + 1 : 1,
+    count: userUsage?.day === currentDay ? userUsage.count + 1 : 1,
   });
 
   const apiKey = process.env.GEMINI_API_KEY;
