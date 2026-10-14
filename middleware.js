@@ -48,7 +48,14 @@ export async function middleware(request) {
   if (error || !user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirectTo", `${pathname}${search}`);
-    return NextResponse.redirect(loginUrl);
+    const redirectResponse = NextResponse.redirect(loginUrl);
+
+    // Keep cookie changes made during session refresh/cleanup on the redirect response.
+    supabaseResponse.cookies.getAll().forEach(({ name, value, ...options }) => {
+      redirectResponse.cookies.set(name, value, options);
+    });
+
+    return redirectResponse;
   }
 
   return supabaseResponse;

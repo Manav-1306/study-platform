@@ -106,6 +106,7 @@ export default function ChatBox({ subjectName, subjectCode }) {
         </label>
         <input
           id="study-chat-input"
+          data-focus-chat-input
           value={input}
           onChange={(event) => setInput(event.target.value)}
           maxLength={4000}
