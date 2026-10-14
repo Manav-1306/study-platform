@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { AI_CHAT_DOMAINS } from "../lib/auth-config";
+import { AI_CHAT_DOMAINS } from "../../lib/auth-config";
 
 const MAX_MESSAGES_PER_USER_PER_DAY = 20;
 const MAX_REQUESTS_PER_MINUTE = 30;
@@ -24,7 +24,10 @@ async function getAuthenticatedUser() {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    return { user: null, error: new Error("Supabase is not configured yet.") };
+    const error = new Error("Supabase is not configured yet.");
+    console.info("AI chat auth: user found:", false);
+    console.error("AI chat Supabase auth error:", error.message);
+    return { user: null, error };
   }
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
@@ -40,7 +43,15 @@ async function getAuthenticatedUser() {
     },
   });
 
-  return supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getUser();
+  const user = data?.user ?? null;
+
+  console.info("AI chat auth: user found:", Boolean(user));
+  if (error) {
+    console.error("AI chat Supabase auth error:", error.message);
+  }
+
+  return { user, error };
 }
 
 export async function POST(request) {
@@ -126,7 +137,7 @@ export async function POST(request) {
   try {
     const ai = new GoogleGenAI({ apiKey });
     const result = await ai.models.generateContent({
-      model: process.env.GEMINI_MODEL || "gemini-2.5-flash-lite",
+      model: process.env.GEMINI_MODEL || "gemini-3-flash-preview",
       contents: messages,
       config: {
         systemInstruction: `You are a study helper for college engineering students. You are given a subject name and code. Help with that subject: explain concepts simply, give examples, and suggest practice. Keep answers concise. If asked about unrelated things, politely steer back to studying.\n\nCurrent subject: ${subjectName} (${subjectCode}).`,
