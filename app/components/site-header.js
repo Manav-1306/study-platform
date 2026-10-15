@@ -18,9 +18,14 @@ async function getCurrentUser() {
         return cookieStore.getAll();
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          cookieStore.set(name, value, options);
-        });
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch {
+          // Pages can't set cookies while loading. This is fine,
+          // because middleware.js refreshes the login cookies.
+        }
       },
     },
   });
