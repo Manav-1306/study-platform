@@ -129,37 +129,70 @@ export async function POST(request) {
     count: userUsage?.day === currentDay ? userUsage.count + 1 : 1,
   });
 
-  const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return Response.json({ error: "AI chat is not configured yet." }, { status: 503 });
   }
 
-  try {
-    const ai = new GoogleGenAI({ apiKey });
-    const result = await ai.models.generateContent({
-      model: process.env.GEMINI_MODEL || "gemini-3-flash-preview",
-      contents: messages,
-      config: {
-        systemInstruction: `You are a study helper for college engineering students. You are given a subject name and code. Help with that subject: explain concepts simply, give examples, and suggest practice. Keep answers concise. If asked about unrelated things, politely steer back to studying.\n\nCurrent subject: ${subjectName} (${subjectCode}).`,
-        maxOutputTokens: 500,
-      },
-    });
-
-    const reply = result.text?.trim();
-    if (!reply) {
-      return Response.json({ error: "The AI could not form a reply. Please try again." }, { status: 502 });
-    }
-
-    return Response.json({ reply });
-  } catch (error) {
-    if (isRateLimitError(error)) {
-      return Response.json(
-        { error: "The AI is busy, please try again in a minute" },
-        { status: 429 },
-      );
-    }
-
-    console.error("Gemini chat request failed.", error?.status ?? "unknown status");
-    return Response.json({ error: "The AI could not respond right now. Please try again." }, { status: 502 });
+  const primaryModel = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
+  const fallbackModel = process.env.GEMINI_FALLBACK_MODEL;
+  const modelsToTry = [primaryModel];
+  if (fallbackModel && fallbackModel !== primaryModel) {
+    modelsToTry.push(fallbackModel);
   }
+
+  const isRetryable = (error) => {
+    const status = Number(error?.status ?? error?.statusCode ?? error?.code);
+    return (
+      [429, 500, 502, 503, 504].includes(status) ||
+      isRateLimitError(error) ||
+      /unavailable|overloaded|high demand/i.test(error?.message ?? "")
+    );
+  };
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const ai = new GoogleGenAI({ apiKey });
+
+  for (const model of modelsToTry) {
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try {
+        const result = await ai.models.generateContent({
+          model,
+          contents: messages,
+          config: {
+            systemInstruction: `You are a study helper for college engineering students. You are given a subject name and code. Help with that subject: explain concepts simply, give examples, and suggest practice. Keep answers concise. If asked about unrelated things, politely steer back to studying.\n\nCurrent subject: ${subjectName} (${subjectCode}).`,
+            maxOutputTokens: 500,
+          },
+        });
+
+        const reply = result.text?.trim();
+        if (!reply) {
+          return Response.json(
+            { error: "The AI could not form a reply. Please try again." },
+            { status: 502 },
+          );
+        }
+
+        return Response.json({ reply });
+      } catch (error) {
+        if (!isRetryable(error)) {
+          console.error("Gemini chat request failed.", model, error?.status ?? "unknown status");
+          return Response.json(
+            { error: "The AI could not respond right now. Please try again." },
+            { status: 502 },
+          );
+        }
+
+        console.error("Gemini busy, retrying.", model, "attempt", attempt, error?.status ?? "");
+        if (attempt < 2) {
+          await sleep(1500);
+        }
+      }
+    }
+  }
+
+  return Response.json(
+    { error: "The AI is busy, please try again in a minute" },
+    { status: 503 },
+  );
 }
