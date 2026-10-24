@@ -124,9 +124,9 @@ export default function LoginPage() {
         return;
       }
 
-      if (data.session) {
-        router.replace(getRedirectDestination());
-        router.refresh();
+                 if (data.session) {
+        const destination = getRedirectDestination();
+        window.location.assign(`/face-check?redirectTo=${encodeURIComponent(destination)}`);
       } else if (isCreatingAccount) {
         setSuccessMessage("Check your email to confirm your account");
       } else {
@@ -261,7 +261,18 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {error && (
+                    <div className="mt-6 flex items-center gap-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <span className="h-px flex-1 bg-slate-200" />
+            or
+            <span className="h-px flex-1 bg-slate-200" />
+          </div>
+
+          <Link
+            href="/face-login"
+            className="mt-6 block w-full rounded-xl border border-violet-300 bg-violet-50 px-4 py-3 text-center font-semibold text-violet-800 transition hover:bg-violet-100"
+          >
+            Sign in with face
+          </Link>{error && (
             <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700" role="alert" aria-live="polite">
               {error}
             </p>

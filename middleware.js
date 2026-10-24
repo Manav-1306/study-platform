@@ -58,6 +58,19 @@ export async function middleware(request) {
     return redirectResponse;
   }
 
+  const { data: faceOk } = await supabase.rpc("face_session_ok");
+  if (!faceOk) {
+    const faceUrl = new URL("/face-check", request.url);
+    faceUrl.searchParams.set("redirectTo", `${pathname}${search}`);
+    const faceRedirect = NextResponse.redirect(faceUrl);
+
+    supabaseResponse.cookies.getAll().forEach(({ name, value, ...options }) => {
+      faceRedirect.cookies.set(name, value, options);
+    });
+
+    return faceRedirect;
+  }
+
   return supabaseResponse;
 }
 

@@ -160,8 +160,8 @@ export async function POST(request) {
           model,
           contents: messages,
           config: {
-            systemInstruction: `You are a study helper for college engineering students. You are given a subject name and code. Help with that subject: explain concepts simply, give examples, and suggest practice. Keep answers concise. If asked about unrelated things, politely steer back to studying.\n\nCurrent subject: ${subjectName} (${subjectCode}).`,
-            maxOutputTokens: 500,
+            systemInstruction: `You are a study helper for college engineering students. You are given a subject name and code. Help with that subject: explain concepts simply, give examples, and suggest practice. Give clear, in-depth answers: explain step by step, add worked examples, and always finish every answer completely. Use a short answer only if the student asks for a quick one. If the student says detailed or more, go deeper on the previous topic. If asked about unrelated things, politely steer back to studying.\n\nCurrent subject: ${subjectName} (${subjectCode}).`,
+            maxOutputTokens: 3000,
           },
         });
 
